@@ -15,11 +15,13 @@ import { CreateUserRequestDto } from '../domain/dto/request/create-user.request.
 import { UpdateUserRequestDto } from '../domain/dto/request/update-user.request.dto';
 import { UserResponseDto } from '../domain/dto/response/user.response.dto';
 import { UserListResponseDto } from '../domain/dto/response/user-list.response.dto';
+import { Public } from '../../auth/decorators/public.decoratorf';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateUserRequestDto): Promise<UserResponseDto> {

@@ -17,7 +17,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.repository.findOne({ where: { _id: id } as any });
+    return this.repository.findOne({ where: { id } });
   }
 
   async findByEmail(email: Email): Promise<User | null> {
