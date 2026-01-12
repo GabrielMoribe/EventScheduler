@@ -14,8 +14,9 @@ import { ConfigService } from '@nestjs/config';
         password: configService.get('database.postgres.password'),
         database: configService.get('database.postgres.database'),
         autoLoadEntities: true,
-        synchronize: configService.get('app.nodeEnv') === 'development', // Apenas em dev!
+        synchronize: false,
         logging: configService.get('app.nodeEnv') === 'development',
+        migrationsRun: false,
       }),
       inject: [ConfigService],
     }),
