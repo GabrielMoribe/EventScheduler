@@ -1,6 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 import { User } from '../modules/users/domain/entities/user.entity';
+import { Event } from '../modules/events/domain/entities/event.entity';
 
 config();
 
@@ -20,7 +21,7 @@ export const dataSourceOptions: DataSourceOptions = {
   password: getEnvOrThrow('POSTGRES_PASSWORD'),
   database: getEnvOrThrow('POSTGRES_DB'),
   logging: true,
-  entities: [User],
+  entities: [User, Event],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
 };

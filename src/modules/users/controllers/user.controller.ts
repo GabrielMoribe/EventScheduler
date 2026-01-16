@@ -15,7 +15,7 @@ import { CreateUserRequestDto } from '../domain/dto/request/create-user.request.
 import { UpdateUserRequestDto } from '../domain/dto/request/update-user.request.dto';
 import { UserResponseDto } from '../domain/dto/response/user.response.dto';
 import { UserListResponseDto } from '../domain/dto/response/user-list.response.dto';
-import { Public } from '../../auth/decorators/public.decoratorf';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller('users')
 export class UsersController {
