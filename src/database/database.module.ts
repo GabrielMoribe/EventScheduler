@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { ConfigService } from '@nestjs/config';
         autoLoadEntities: true,
         synchronize: false,
         logging: configService.get('app.nodeEnv') === 'development',
-        migrationsRun: false,
+        migrationsRun: true,
+        migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
       }),
       inject: [ConfigService],
     }),

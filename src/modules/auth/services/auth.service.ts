@@ -6,6 +6,7 @@ import { User } from '../../users/domain/entities/user.entity';
 import { LoginRequestDto } from '../dto/request/login.request.dto';
 import { AuthResponseDto } from '../dto/response/auth.response.dto';
 import { JwtPayload } from '../strategies/jwt.strategy';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async login(dto: LoginRequestDto): Promise<AuthResponseDto> {
@@ -24,9 +26,6 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async logout(userId: string): Promise<void> {
-    await this.usersService.updateRefreshToken(userId, null);
-  }
 
   private async validateUser(email: string, password: string): Promise<User> {
     try {
@@ -78,7 +77,7 @@ export class AuthService {
 
   private parseExpiresIn(expiresIn: string): number {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
-    if (!match) return 900; 
+    if (!match) return 900;
 
     const value = parseInt(match[1], 10);
     const unit = match[2];
@@ -91,5 +90,16 @@ export class AuthService {
     };
 
     return value * (multipliers[unit] || 60);
+  }
+
+    async logout(userId: string, accessToken: string): Promise<void> {
+    const decoded = this.jwtService.decode(accessToken) as { exp: number };
+    const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+
+    if (expiresIn > 0) {
+      await this.tokenBlacklistService.addToBlacklist(accessToken, expiresIn);
+    }
+
+    await this.usersService.updateRefreshToken(userId, null);
   }
 }

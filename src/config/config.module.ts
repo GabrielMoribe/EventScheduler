@@ -3,17 +3,16 @@ import { ConfigModule } from '@nestjs/config';
 import {
   appConfig,
   databaseConfig,
+  jwtConfig,
   redisConfig,
   rabbitmqConfig,
-  jwtConfig,
 } from './app.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
-      load: [appConfig, databaseConfig, redisConfig, rabbitmqConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, redisConfig, rabbitmqConfig],
     }),
   ],
 })

@@ -4,8 +4,10 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LoginRequestDto } from '../dto/request/login.request.dto';
 import { AuthResponseDto } from '../dto/response/auth.response.dto';
@@ -35,7 +37,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@CurrentUser() user: User): Promise<void> {
-    await this.authService.logout(user.id);
+  async logout(@CurrentUser() user: User, @Req() req: any): Promise<void> {
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    await this.authService.logout(user.id, token);
   }
 }
