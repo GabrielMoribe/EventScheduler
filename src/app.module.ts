@@ -10,6 +10,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { EventsModule } from './modules/events/events.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { RabbitMQModule } from './modules/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     UsersModule,
     AuthModule,
     EventsModule,
+    NotificationsModule,
+    RabbitMQModule,
   ],
   controllers: [AppController],
   providers: [

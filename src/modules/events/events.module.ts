@@ -6,9 +6,14 @@ import { EventsService } from './services/event.service';
 import { EventRepository } from './repositories/event.repository';
 import { EVENT_REPOSITORY } from './domain/interface/event-repository.interface';
 import { UsersModule } from '../users/users.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Event]),
+    UsersModule,
+    NotificationsModule,
+  ],
   controllers: [EventsController],
   providers: [
     EventsService,

@@ -8,7 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Put,
-  Patch,k
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';

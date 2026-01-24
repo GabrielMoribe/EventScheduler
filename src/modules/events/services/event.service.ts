@@ -4,17 +4,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Event } from '../domain/entities/event.entity';
-import { EventStatus } from '../domain/enums/event-status.enum';
 import {
   IEventRepository,
   EVENT_REPOSITORY,
   EventFilters,
 } from '../domain/interface/event-repository.interface';
+import { Event } from '../domain/entities/event.entity';
+import { EventStatus } from '../domain/enums/event-status.enum';
 import { CreateEventRequestDto } from '../domain/dto/request/create-event.request.dto';
 import { UpdateEventRequestDto } from '../domain/dto/request/update-event.request.dto';
 import { UsersService } from '../../users/services/user.service';
 import { UserRole } from '../../users/domain/enums/user-role.enum';
+import { NotificationProducer } from '../../notifications/producers/notification.producer';
 
 @Injectable()
 export class EventsService {
@@ -22,6 +23,7 @@ export class EventsService {
     @Inject(EVENT_REPOSITORY)
     private readonly eventRepository: IEventRepository,
     private readonly usersService: UsersService,
+    private readonly notificationProducer: NotificationProducer,
   ) {}
 
   async create(dto: CreateEventRequestDto, organizerId: string): Promise<Event> {
@@ -39,25 +41,50 @@ export class EventsService {
     return this.findById(savedEvent.id);
   }
 
-async publish(id: string, userId: string, userRole: UserRole): Promise<Event> {
-  const event = await this.findById(id);
-  this.checkPermission(event, userId, userRole);
-  
-  event.publish();
-  
-  await this.eventRepository.update(event);
-  return this.findById(id);
-}
+  async publish(id: string, userId: string, userRole: UserRole): Promise<Event> {
+    const event = await this.findById(id);
+    this.checkPermission(event, userId, userRole);
+    
+    event.publish();
+    
+    await this.eventRepository.update(event);
 
-async cancel(id: string, userId: string, userRole: UserRole): Promise<Event> {
-  const event = await this.findById(id);
-  this.checkPermission(event, userId, userRole);
-  
-  event.cancel();
-  
-  await this.eventRepository.update(event);
-  return this.findById(id);
-}
+    // Notificar participantes (se houver)
+    const participantIds = event.participants.map((p) => p.id);
+    if (participantIds.length > 0) {
+      await this.notificationProducer.sendEventPublishedNotification(
+        event.id,
+        event.title,
+        event.organizer.fullName,
+        participantIds,
+      );
+    }
+
+    return this.findById(id);
+  }
+
+  async cancel(id: string, userId: string, userRole: UserRole): Promise<Event> {
+    const event = await this.findById(id);
+    this.checkPermission(event, userId, userRole);
+    
+    // Guardar IDs dos participantes antes de cancelar
+    const participantIds = event.participants.map((p) => p.id);
+    
+    event.cancel();
+    
+    await this.eventRepository.update(event);
+
+    // Notificar participantes sobre cancelamento
+    if (participantIds.length > 0) {
+      await this.notificationProducer.sendEventCancelledNotification(
+        event.id,
+        event.title,
+        participantIds,
+      );
+    }
+
+    return this.findById(id);
+  }
 
 async complete(id: string, userId: string, userRole: UserRole): Promise<Event> {
   const event = await this.findById(id);
@@ -136,18 +163,31 @@ async complete(id: string, userId: string, userRole: UserRole): Promise<Event> {
 
     await this.eventRepository.update(event);
 
-    // Retorna o evento atualizado com relações
+    await this.notificationProducer.sendEventJoinedNotification(
+      event.id,
+      event.title,
+      event.organizerId,
+      user.fullName,
+    );
+
     return this.findById(eventId);
   }
 
   async leave(eventId: string, userId: string): Promise<Event> {
     const event = await this.findById(eventId);
+    const user = await this.usersService.findById(userId);
 
     event.removeParticipant(userId);
 
     await this.eventRepository.update(event);
 
-    // Retorna o evento atualizado com relações
+    await this.notificationProducer.sendEventLeftNotification(
+      event.id,
+      event.title,
+      event.organizerId,
+      user.fullName,
+    );
+
     return this.findById(eventId);
   }
 
